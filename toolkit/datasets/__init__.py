@@ -12,7 +12,8 @@ class DatasetFactory(object):
         """
         Args:
             name: dataset name 'OTB2015', 'LaSOT', 'UAV123', 'NFS240', 'NFS30',
-                'VOT2018', 'VOT2016', 'VOT2018-LT'
+                'VOT2018', 'VOT2016', 'VOT2018-LT' or any other new dataset that matches
+                one of the above formats
             dataset_root: dataset root
             load_img: wether to load image
         Return:
@@ -36,6 +37,8 @@ class DatasetFactory(object):
             dataset = TrackingNetDataset(**kwargs)
         elif 'GOT-10k' == name:
             dataset = GOT10kDataset(**kwargs)
+        elif 'Sauron' == name:
+            dataset = SauronDataset(**kwargs)
         else:
             raise Exception("unknow dataset {}".format(kwargs['name']))
         return dataset
