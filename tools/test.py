@@ -1,5 +1,3 @@
-# Copyright (c) SenseTime. All Rights Reserved.
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -31,17 +29,32 @@ parser.add_argument('--snapshot', default='', type=str,
 parser.add_argument('--video', default='', type=str,
         help='eval one special video')
 parser.add_argument('--vis', action='store_true',
-        help='whether visualzie result')
+        help='whether visualize result')
+parser.add_argument('--threshold', default=0.85, type=float,
+                    help='IOU minimum threshold')
+parser.add_argument('--model_name', default='', type=str,
+                    help='Model architecture')
 args = parser.parse_args()
 
 torch.set_num_threads(1)
-
+vot_like_dataset = ['VOT2016', 'VOT2018', 'VOT2019']
+vot_like_dataset.append('Sauron')
 def main():
+    is_gpu_cuda_available = torch.cuda.is_available()
+    if not is_gpu_cuda_available:
+        raise RuntimeError('Failed to locate a CUDA GPU. Program cannot continue..')
+    num_gpus = torch.cuda.device_count()
+    gpu_type = torch.cuda.get_device_name(0)
+    print(f"You have {num_gpus} available of type: {gpu_type}")
+    print("This might take a few minutes...Grab a cup of coffee\n")
+
     # load config
     cfg.merge_from_file(args.config)
 
-    cur_dir = os.path.dirname(os.path.realpath(__file__))
-    dataset_root = os.path.join(cur_dir, '../testing_dataset', args.dataset)
+    # cur_dir = os.path.dirname(os.path.realpath(__file__))
+    # dataset_root = os.path.join(cur_dir, '../testing_dataset', args.dataset)
+    # dataset_root = os.path.join('/media/saurabh/Elements/raw_data', args.dataset)
+    dataset_root = os.path.join('/media/saurabh/Elements/raw_data/umich/Sauron-data/Sauron-November-data', args.dataset)
 
     # create model
     model = ModelBuilder()
@@ -57,9 +70,9 @@ def main():
                                             dataset_root=dataset_root,
                                             load_img=False)
 
-    model_name = args.snapshot.split('/')[-1].split('.')[0]
+    model_name = args.model_name
     total_lost = 0
-    if args.dataset in ['VOT2016', 'VOT2018', 'VOT2019']:
+    if args.dataset in vot_like_dataset:
         # restart tracking
         for v_idx, video in enumerate(dataset):
             if args.video != '':
@@ -89,13 +102,13 @@ def main():
                     if cfg.MASK.MASK:
                         pred_bbox = outputs['polygon']
                     overlap = vot_overlap(pred_bbox, gt_bbox, (img.shape[1], img.shape[0]))
-                    if overlap > 0:
+                    if overlap > 0.85:
                         # not lost
                         pred_bboxes.append(pred_bbox)
                     else:
                         # lost object
                         pred_bboxes.append(2)
-                        frame_counter = idx + 5 # skip 5 frames
+                        frame_counter = idx + 1 # skip 1 frame
                         lost_number += 1
                 else:
                     pred_bboxes.append(0)
@@ -118,8 +131,8 @@ def main():
                     cv2.waitKey(1)
             toc /= cv2.getTickFrequency()
             # save results
-            video_path = os.path.join('results', args.dataset, model_name,
-                    'baseline', video.name)
+            video_path = os.path.join(os.path.join(dataset_root, '../', 'November-results/ryan-jeremy-demo-dummy'),
+                                      args.dataset, model_name, video.name)
             if not os.path.isdir(video_path):
                 os.makedirs(video_path)
             result_path = os.path.join(video_path, '{}_001.txt'.format(video.name))
@@ -129,7 +142,10 @@ def main():
                         f.write("{:d}\n".format(x))
                     else:
                         f.write(','.join([vot_float2str("%.4f", i) for i in x])+'\n')
-            print('({:3d}) Video: {:12s} Time: {:4.1f}s Speed: {:3.1f}fps Lost: {:d}'.format(
+            with open(os.path.join(video_path, '..', 'lost.txt'), 'a+') as f:
+                f.write(f"{v_idx+1} Class: {video.name} | Time: {toc}s | Speed: {idx/toc}fps | Lost:{lost_number}  \n")
+
+            print('({:3d}) Class: {:12s} Time: {:4.1f}s Speed: {:3.1f}fps Lost: {:d}'.format(
                     v_idx+1, video.name, toc, idx / toc, lost_number))
             total_lost += lost_number
         print("{:s} total lost: {:d}".format(model_name, total_lost))
@@ -178,7 +194,7 @@ def main():
             toc /= cv2.getTickFrequency()
             # save results
             if 'VOT2018-LT' == args.dataset:
-                video_path = os.path.join('results', args.dataset, model_name,
+                video_path = os.path.join('../experiments/siamrpn_r50_l234_dwxcorr_8gpu/results', args.dataset, model_name,
                         'longterm', video.name)
                 if not os.path.isdir(video_path):
                     os.makedirs(video_path)
@@ -198,7 +214,7 @@ def main():
                     for x in track_times:
                         f.write("{:.6f}\n".format(x))
             elif 'GOT-10k' == args.dataset:
-                video_path = os.path.join('results', args.dataset, model_name, video.name)
+                video_path = os.path.join('../experiments/siamrpn_r50_l234_dwxcorr_8gpu/results', args.dataset, model_name, video.name)
                 if not os.path.isdir(video_path):
                     os.makedirs(video_path)
                 result_path = os.path.join(video_path, '{}_001.txt'.format(video.name))
@@ -211,7 +227,7 @@ def main():
                     for x in track_times:
                         f.write("{:.6f}\n".format(x))
             else:
-                model_path = os.path.join('results', args.dataset, model_name)
+                model_path = os.path.join('../experiments/siamrpn_r50_l234_dwxcorr_8gpu/results', args.dataset, model_name)
                 if not os.path.isdir(model_path):
                     os.makedirs(model_path)
                 result_path = os.path.join(model_path, '{}.txt'.format(video.name))
@@ -224,3 +240,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
