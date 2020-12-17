@@ -1,6 +1,7 @@
 # PySOT Testing and Evaluation Tutorial
 
-This implements testing of the trained model and evaluates its performance on different experiments and models
+This implements testing of the trained model and evaluates its performance on different experiments and models. This repository will not deal with any training currently.
+
 ### Confirm presence of PySOT in your PYTHONPATH
 Pysot path has already been added to the `bashrc` file. In case, you face issues like 
 ```
