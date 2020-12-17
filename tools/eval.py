@@ -10,7 +10,7 @@ from glob import glob
 from tqdm import tqdm
 from multiprocessing import Pool
 from toolkit.datasets import OTBDataset, UAVDataset, LaSOTDataset, \
-        VOTDataset, NFSDataset, VOTLTDataset
+        VOTDataset, NFSDataset, VOTLTDataset, SauronDataset
 from toolkit.evaluation import OPEBenchmark, AccuracyRobustnessBenchmark, \
         EAOBenchmark, F1Benchmark
 
@@ -25,6 +25,8 @@ parser.add_argument('--tracker_prefix', '-t', default='',
                     type=str, help='tracker name')
 parser.add_argument('--show_video_level', '-s', dest='show_video_level',
                     action='store_true')
+parser.add_argument('--groundtruth_path', '-g', type=str,
+                    help='path to ground truth txt files')
 parser.set_defaults(show_video_level=False)
 args = parser.parse_args()
 
@@ -39,8 +41,7 @@ def main():
     assert len(trackers) > 0
     args.num = min(args.num, len(trackers))
 
-    root = os.path.realpath(os.path.join(os.path.dirname(__file__),
-                            '../testing_dataset'))
+    root = args.groundtruth_path
     root = os.path.join(root, args.dataset)
     if 'OTB' in args.dataset:
         dataset = OTBDataset(args.dataset, root)
@@ -113,6 +114,24 @@ def main():
                 show_video_level=args.show_video_level)
     elif args.dataset in ['VOT2016', 'VOT2017', 'VOT2018', 'VOT2019']:
         dataset = VOTDataset(args.dataset, root)
+        dataset.set_tracker(tracker_dir, trackers)
+        ar_benchmark = AccuracyRobustnessBenchmark(dataset)
+        ar_result = {}
+        with Pool(processes=args.num) as pool:
+            for ret in tqdm(pool.imap_unordered(ar_benchmark.eval,
+                trackers), desc='eval ar', total=len(trackers), ncols=100):
+                ar_result.update(ret)
+
+        benchmark = EAOBenchmark(dataset)
+        eao_result = {}
+        with Pool(processes=args.num) as pool:
+            for ret in tqdm(pool.imap_unordered(benchmark.eval,
+                trackers), desc='eval eao', total=len(trackers), ncols=100):
+                eao_result.update(ret)
+        ar_benchmark.show_result(ar_result, eao_result,
+                show_video_level=args.show_video_level)
+    elif 'Sauron' in args.dataset:
+        dataset = SauronDataset(args.dataset, root)
         dataset.set_tracker(tracker_dir, trackers)
         ar_benchmark = AccuracyRobustnessBenchmark(dataset)
         ar_result = {}
