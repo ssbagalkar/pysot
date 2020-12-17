@@ -27,6 +27,8 @@ class VOTVideo(Video):
     """
     def __init__(self, name, root, video_dir, init_rect, img_names, gt_rect,
             camera_motion, illum_change, motion_change, size_change, occlusion, load_img=False):
+        img_names = [os.path.join(name.split('/')[0], 'color', name.split('/')[1]) for name in img_names]
+
         super(VOTVideo, self).__init__(name, root, video_dir,
                 init_rect, img_names, gt_rect, None, load_img)
         self.tags= {'all': [1] * len(gt_rect)}
@@ -36,11 +38,6 @@ class VOTVideo(Video):
         self.tags['size_change'] = size_change
         self.tags['occlusion'] = occlusion
 
-        # TODO
-        # if len(self.gt_traj[0]) == 4:
-        #     self.gt_traj = [[x[0], x[1], x[0], x[1]+x[3]-1,
-        #                     x[0]+x[2]-1, x[1]+x[3]-1, x[0]+x[2]-1, x[1]]
-        #                         for x in self.gt_traj]
 
         # empty tag
         all_tag = [v for k, v in self.tags.items() if len(v) > 0 ]
