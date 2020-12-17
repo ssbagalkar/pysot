@@ -5,6 +5,7 @@ from .lasot import LaSOTDataset
 from .nfs import NFSDataset
 from .trackingnet import TrackingNetDataset
 from .got10k import GOT10kDataset
+from .sauron import SauronDataset
 
 class DatasetFactory(object):
     @staticmethod
