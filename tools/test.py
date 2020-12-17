@@ -9,7 +9,6 @@ import os
 import cv2
 import torch
 import numpy as np
-
 from pysot.core.config import cfg
 from pysot.models.model_builder import ModelBuilder
 from pysot.tracker.tracker_builder import build_tracker
@@ -41,7 +40,7 @@ parser.add_argument('--experiment_name', default='', type=str,
 parser.add_argument('--results_path', default='', type=str,
                     help='absolute path of results directory')
 parser.add_argument('--dataset_directory', default='', type=str,
-                    help='absolute path of dataset directory')
+                    help='path to dataset directory')
 
 args = parser.parse_args()
 
@@ -139,7 +138,7 @@ def main():
                     cv2.waitKey(1)
             toc /= cv2.getTickFrequency()
             # save results
-            save_path = os.path.join(args.results_path, args.dataset, model_name, video.name)
+            save_path = os.path.join(args.results_path, args.dataset, model_name, args.experiment_name, video.name)
             if not os.path.isdir(save_path):
                 os.makedirs(save_path)
             result_path = os.path.join(save_path, '{}_001.txt'.format(video.name))
@@ -156,9 +155,13 @@ def main():
                     v_idx+1, video.name, toc, idx / toc, lost_number))
             total_lost += lost_number
         print("{:s} total lost: {:d}".format(model_name, total_lost))
+        with open(os.path.join(save_path, '..', 'lost.txt'), 'a+') as f:
+            f.write(f"Model architeture used --> {model_name} \ntotal lost: {total_lost} \n")
+            f.write(f"SKIP FRAMES USED --> {args.skip_frames}")
     else:
         # OPE tracking
         # will be implemented if needed in future
+        pass
 
 
 if __name__ == '__main__':
