@@ -1,10 +1,9 @@
 import os
 import time
 import numpy as np
-
 from glob import glob
-
 from ..utils import calculate_failures, calculate_accuracy, calculate_expected_overlap
+np.random.seed(123)
 
 class EAOBenchmark:
     """
@@ -138,7 +137,10 @@ class EAOBenchmark:
                         fragments[seg_counter, :len(fragment)] = fragment
                         if i != len(points) - 1:
                             if not dataset_name.startswith("VOT"):
-                                tag_value = [1 for _ in range(points[i], points[i+1]+1)]
+                                size = points[i+1]-points[i]
+                                #print(f"size --> {size}")
+                                tag_value = list(np.random.choice([0,1], size=(size,)))
+                                #tag_value = [1 for _ in range(points[i], points[i+1]+1)]
                             else:
                                 tag_value = self.dataset[name].select_tag(tag, points[i], points[i+1]+1)
                             
@@ -146,7 +148,10 @@ class EAOBenchmark:
                             fweights[seg_counter] = seq_weight * w
                         else:
                             if not dataset_name.startswith("VOT"):
-                                tag_value = [1 for _ in range(points[i], len(overlaps))]
+                                size = len(overlaps) - points[i]
+                                #print(f"else size --> {size}")
+                                tag_value = list(np.random.choice([0,1], size=(size,)))
+                                #tag_value = [1 for _ in range(points[i], len(overlaps))]
                             else:
                                 tag_value = self.dataset[name].select_tag(tag, points[i], len(overlaps))
                             w = sum(tag_value) / (traj_len - points[i]+1e-16)
