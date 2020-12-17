@@ -28,6 +28,10 @@ class EAOBenchmark:
             self.low = 108
             self.high = 371
             self.peak = 168
+        else:
+            self.low = 46
+            self.high = 291
+            self.peak = 128
 
     def eval(self, eval_trackers=None):
         """
@@ -44,7 +48,7 @@ class EAOBenchmark:
 
         ret = {}
         for tracker_name in eval_trackers:
-            eao = self._calculate_eao(tracker_name, self.tags)
+            eao = self._calculate_eao(tracker_name, self.tags, self.dataset.name)
             ret[tracker_name] = eao
         return ret
 
@@ -86,7 +90,7 @@ class EAOBenchmark:
                     *[result[tracker_name][x] for x in self.tags]))
             print(bar)
 
-    def _calculate_eao(self, tracker_name, tags):
+    def _calculate_eao(self, tracker_name, tags, dataset_name):
         all_overlaps = []
         all_failures = []
         video_names = []
@@ -133,13 +137,18 @@ class EAOBenchmark:
                         fragment[np.isnan(fragment)] = 0
                         fragments[seg_counter, :len(fragment)] = fragment
                         if i != len(points) - 1:
-                            # tag_value = self.dataset[name].tags[tag][points[i]:points[i+1]+1]
-                            tag_value = self.dataset[name].select_tag(tag, points[i], points[i+1]+1)
+                            if not dataset_name.startswith("VOT"):
+                                tag_value = [1 for _ in range(points[i], points[i+1]+1)]
+                            else:
+                                tag_value = self.dataset[name].select_tag(tag, points[i], points[i+1]+1)
+                            
                             w = sum(tag_value) / (points[i+1] - points[i]+1)
                             fweights[seg_counter] = seq_weight * w
                         else:
-                            # tag_value = self.dataset[name].tags[tag][points[i]:len(overlaps)]
-                            tag_value = self.dataset[name].select_tag(tag, points[i], len(overlaps))
+                            if not dataset_name.startswith("VOT"):
+                                tag_value = [1 for _ in range(points[i], len(overlaps))]
+                            else:
+                                tag_value = self.dataset[name].select_tag(tag, points[i], len(overlaps))
                             w = sum(tag_value) / (traj_len - points[i]+1e-16)
                             fweights[seg_counter] = seq_weight * w# (len(fragment) / (traj_len-points[i]))
                         seg_counter += 1
@@ -147,8 +156,10 @@ class EAOBenchmark:
                     # no failure
                     max_idx = min(len(overlaps), max_len)
                     fragments[seg_counter, :max_idx] = overlaps[:max_idx]
-                    # tag_value = self.dataset[name].tags[tag][:max_idx]
-                    tag_value = self.dataset[name].select_tag(tag, 0, max_idx)
+                    if not dataset_name.startswith("VOT"):
+                        tag_value = [1 for _ in range(max_idx)]
+                    else:
+                        tag_value = self.dataset[name].select_tag(tag, 0, max_idx)
                     w = sum(tag_value) / max_idx
                     fweights[seg_counter] = seq_weight * w
                     seg_counter += 1
