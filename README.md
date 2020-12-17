@@ -62,19 +62,22 @@ All associated groundtruth is in the ebs-volume `saurabh-OT-umich` --> `evaluati
   Note: The groudtruth data( bounding box coordinates) is converted from topo-chico to VOT-like dataset and placed in `Sauron.json` .
   
  
-### Run OT testing scripts
+### Run OT Testing scripts
 * `ssh` into the instance `OT-eval-tests`
 * `source pytorch_p36` <-- this enables pytorch and the mandatory cuda environment
+* mount the ebs volume if it is not already mounted to ec-2 instance. check with `lsblk` and then `sudo mount /dev/xvdf[check this location] /mountdir`
 * `cd /home/ubuntu/object-tracking` and run
 ```
-python pysot/tools/test.py --dataset VOT2019 --config pysot/experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml 
+python pysot/tools/test.py 
+--dataset VOT2019 --config pysot/experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml 
 --snapshot /mountdir/14_videos_Nov_2020/results/generic_model_snapshot/model.pth 
 --model_name SiamRPNpp --experiment_name generic --results_path /mountdir/evaluation_results 
 --dataset_directory /mountdir/evaluation_data/VOT_datasets
 ```
 * For running a custom trained model, like umich, you can do the following:
 ```
-ython pysot/tools/test.py --dataset Sauron --config pysot/experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml 
+python pysot/tools/test.py 
+--dataset Sauron --config pysot/experiments/siamrpn_r50_l234_dwxcorr_8gpu/config.yaml 
 --snapshot /mountdir/14_videos_Nov_2020/results/snapshot/checkpoint_e9.pth --model_name SiamRPNpp 
 --experiment_name checkpoint_e9_ec2 --results_path /mountdir/evaluation_results 
 --dataset_directory /mountdir/evaluation_data/Sauron-umich
@@ -125,4 +128,25 @@ Let's look at one snippet
 Here, `1` indicates, we initialize the tracker, the coordinates indicate that we are successfully tracking the object for
 that many frames, in above case, 9 frames, with IOU of atleast 0.85 and `2` indicates, we lost the tracker. Then we again initialized it, so on and so forth.   
 
+### Running OT Evaluation scripts
+* From `/home/ubuntu/object-tracking` do:
+ ```
+python pysot/tools/eval.py 
+--tracker_path /mountdir/evaluation_results --dataset Sauron 
+--tracker_prefix SiamRPNpp 
+--groundtruth_path /mountdir/evaluation_data/Sauron-umich
+```
+
+The comparison results will look something like this:
+```
+eval ar: 100%|████████████████████████████████████████████████████████| 2/2 [00:00<00:00, 11.20it/s]
+eval eao: 100%|███████████████████████████████████████████████████████| 2/2 [00:00<00:00,  6.07it/s]
+
+
+    |     Tracker Name     | Accuracy | Robustness | Lost Number |  EAO  |
+    | SiamRPNpp_chk_e9_ec2 |  0.919   |   11.506   |    81.0     | 0.079 |
+    |  SiamRPNpp_generic   |  0.897   |   12.784   |    90.0     | 0.066 |
+```
+
+Here- its safe to assume that `SiamRPNpp_chk_e9_ec2` is performing better than `SiamRPNpp_chk_e9_ec2`.
 
