@@ -148,5 +148,5 @@ eval eao: 100%|█████████████████████�
     |  SiamRPNpp_generic   |  0.897   |   12.784   |    90.0     | 0.066 |
 ```
 
-Here- its safe to assume that `SiamRPNpp_chk_e9_ec2` is performing better than `SiamRPNpp_chk_e9_ec2`.
+Here- its safe to assume that `SiamRPNpp_chk_e9_ec2` is performing better than `SiamRPNpp_generic`.
 
