@@ -26,8 +26,9 @@ All associated groundtruth is in the ebs-volume `saurabh-OT-umich` --> `evaluati
 * Each folder name is organized according to the Dataset, for example, VOT2019
 
 
-    | -- VOT_datasets
- 
+    
+    
+      | -- VOT_datasets
         | -- VOT2019
             | -- agility
                 | -- camera_motion.tag
@@ -50,7 +51,8 @@ All associated groundtruth is in the ebs-volume `saurabh-OT-umich` --> `evaluati
             | -- VOT2019.json
    Note: the `.tag` files only make sense when using VOT20XX datasets. For custom models, we will ignore those. For example, umich/Sauron
    
-    | -- Sauron-umich
+   
+      | -- Sauron-umich
         | -- Sauron
             | --  Cystotome
                 | -- frame001671.png
@@ -60,6 +62,8 @@ All associated groundtruth is in the ebs-volume `saurabh-OT-umich` --> `evaluati
                 | -- ...
             | -- ...
             | -- Sauron.json
+            
+            
   Note: The groudtruth data( bounding box coordinates) is converted from topo-chico to VOT-like dataset and placed in `Sauron.json` .
   
  
@@ -96,7 +100,8 @@ Generally, Lost number should be as low as possible, while Accuracy, Precision a
 * All test results are written here `/home/ubuntu/evaluation_results`
 
 
-    | -- VOT2019
+    
+      | -- VOT2019
         | -- SiamRPNpp[or your architecture name]
             | -- generic [or your experiment name]
                 | -- agility
