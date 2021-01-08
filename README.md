@@ -69,7 +69,7 @@ All associated groundtruth is in the ebs-volume `saurabh-OT-umich` --> `evaluati
  
 ### Run OT Testing scripts
 * `ssh` into the instance `OT-eval-tests`
-* `source pytorch_p36` <-- this enables pytorch and the mandatory cuda environment
+* `source activate pytorch_p36` <-- this enables pytorch and the mandatory cuda environment
 * mount the ebs volume if it is not already mounted to ec-2 instance. check with `lsblk` and then `sudo mount /dev/xvdf[check this location] /mountdir`
 * `cd /home/ubuntu/object-tracking` and run
 ```
